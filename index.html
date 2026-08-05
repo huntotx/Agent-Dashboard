@@ -27,4 +27,351 @@
     --amber:#e0a45a;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
-  html,body{-webkit-tap-highlight-color:tr
+  html,body{-webkit-tap-highlight-color:transparent;}
+  body{
+    background:radial-gradient(circle at 15% 0%, #14120a 0%, var(--black) 45%);
+    color:var(--text);
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    min-height:100vh;
+    min-height:100dvh;
+    padding:32px;
+    padding-top:calc(32px + env(safe-area-inset-top));
+    padding-bottom:calc(32px + env(safe-area-inset-bottom));
+  }
+  .wrap{max-width:1320px;margin:0 auto;}
+
+  header{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    margin-bottom:28px;flex-wrap:wrap;gap:16px;
+  }
+  .brand{display:flex;align-items:center;gap:14px;}
+  .brand-mark{
+    width:44px;height:44px;border-radius:10px;
+    background:linear-gradient(135deg,var(--gold-bright),var(--gold-dim));
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;color:#0a0a0a;font-size:18px;
+    box-shadow:0 0 24px rgba(212,175,55,0.35);
+  }
+  .brand h1{font-size:20px;font-weight:600;letter-spacing:0.3px;}
+  .brand span{display:block;font-size:12px;color:var(--text-dim);margin-top:2px;letter-spacing:0.5px;}
+  .clock{font-size:13px;color:var(--text-dim);text-align:right;}
+  .clock b{color:var(--gold);font-weight:600;}
+
+  .stats{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;
+  }
+  .stat-card{
+    background:linear-gradient(180deg,var(--panel),var(--panel-2));
+    border:1px solid var(--border);border-radius:14px;padding:20px;
+    position:relative;overflow:hidden;
+  }
+  .stat-card::after{
+    content:"";position:absolute;top:-40%;right:-30%;width:140px;height:140px;
+    background:radial-gradient(circle,rgba(212,175,55,0.12),transparent 70%);
+  }
+  .stat-label{font-size:12px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.8px;}
+  .stat-value{font-size:32px;font-weight:700;margin-top:8px;color:var(--gold-bright);}
+  .stat-delta{font-size:12px;margin-top:6px;color:var(--green);}
+  .stat-delta.down{color:var(--red);}
+
+  .grid{display:grid;grid-template-columns:1.55fr 1fr;gap:20px;}
+
+  .panel{
+    background:linear-gradient(180deg,var(--panel),var(--panel-2));
+    border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:20px;
+  }
+  .panel h2{font-size:14px;font-weight:600;letter-spacing:0.4px;color:var(--gold);
+    text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+  .panel h2::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--gold);
+    box-shadow:0 0 8px var(--gold);}
+
+  .agent-row{
+    display:flex;align-items:center;gap:14px;padding:14px 10px;border-radius:10px;
+    border-bottom:1px solid rgba(255,255,255,0.04);transition:background 0.15s;
+  }
+  .agent-row:last-child{border-bottom:none;}
+  .agent-row:hover{background:rgba(212,175,55,0.05);}
+  .agent-avatar{
+    width:38px;height:38px;border-radius:9px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;font-size:16px;
+    background:rgba(212,175,55,0.1);border:1px solid var(--border-strong);
+  }
+  .agent-info{flex:1;min-width:0;}
+  .agent-name{font-size:14px;font-weight:600;}
+  .agent-task{font-size:12px;color:var(--text-dim);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .agent-progress{width:120px;height:5px;border-radius:4px;background:rgba(255,255,255,0.06);overflow:hidden;margin-top:8px;}
+  .agent-progress-fill{height:100%;background:linear-gradient(90deg,var(--gold-dim),var(--gold-bright));}
+  .status-pill{
+    font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;text-transform:uppercase;
+    letter-spacing:0.4px;flex-shrink:0;
+  }
+  .status-active{background:rgba(95,191,122,0.14);color:var(--green);border:1px solid rgba(95,191,122,0.3);}
+  .status-idle{background:rgba(168,162,148,0.12);color:var(--text-dim);border:1px solid rgba(168,162,148,0.25);}
+  .status-error{background:rgba(224,96,90,0.14);color:var(--red);border:1px solid rgba(224,96,90,0.3);}
+  .status-queued{background:rgba(224,164,90,0.14);color:var(--amber);border:1px solid rgba(224,164,90,0.3);}
+
+  .feed-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+  .feed-item:last-child{border-bottom:none;padding-bottom:0;}
+  .feed-dot{width:8px;height:8px;border-radius:50%;background:var(--gold);margin-top:5px;flex-shrink:0;
+    box-shadow:0 0 6px rgba(212,175,55,0.6);}
+  .feed-text{font-size:13px;color:var(--text);}
+  .feed-time{font-size:11px;color:var(--text-dim);margin-top:3px;}
+
+  .chart-box{height:220px;}
+
+  .mini-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px;}
+  .mini-stat{background:rgba(212,175,55,0.05);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;}
+  .mini-stat-label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.6px;}
+  .mini-stat-value{font-size:20px;font-weight:700;color:var(--gold-bright);margin-top:6px;}
+  .mini-stat-value.positive{color:var(--green);}
+
+  .revenue-breakdown{display:flex;flex-direction:column;gap:12px;margin-top:18px;}
+  .revenue-row{font-size:13px;}
+  .revenue-row-top{display:flex;justify-content:space-between;margin-bottom:6px;color:var(--text-dim);}
+  .revenue-row-top b{color:var(--text);font-weight:600;}
+  .revenue-bar{height:6px;border-radius:4px;background:rgba(255,255,255,0.06);overflow:hidden;}
+  .revenue-bar-fill{height:100%;background:linear-gradient(90deg,var(--gold-dim),var(--gold-bright));}
+
+  .pipeline{display:flex;flex-direction:column;gap:10px;}
+  .pipeline-item{display:flex;justify-content:space-between;align-items:center;font-size:13px;
+    padding:10px 12px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:8px;}
+  .pipeline-item .stage{color:var(--text-dim);font-size:11px;text-transform:uppercase;letter-spacing:0.4px;}
+
+  footer{text-align:center;color:var(--text-dim);font-size:11px;margin-top:12px;letter-spacing:0.4px;}
+  footer b{color:var(--gold-dim);}
+
+  @media(max-width:900px){
+    .stats{grid-template-columns:repeat(2,1fr);}
+    .grid{grid-template-columns:1fr;}
+  }
+
+  @media(max-width:520px){
+    body{padding:18px;padding-top:calc(18px + env(safe-area-inset-top));padding-bottom:calc(18px + env(safe-area-inset-bottom));}
+    header{flex-direction:column;align-items:flex-start;}
+    .clock{text-align:left;}
+    .stats{grid-template-columns:1fr;}
+    .stat-value{font-size:26px;}
+    .panel{padding:16px;}
+    .agent-progress{width:80px;}
+    .brand h1{font-size:17px;}
+    .mini-stats{grid-template-columns:1fr 1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <div class="brand-mark">A</div>
+      <div>
+        <h1>Agent Fleet Dashboard</h1>
+        <span>YouTube Automation &middot; Live Overview</span>
+      </div>
+    </div>
+    <div class="clock">
+      <div id="today"></div>
+      <div><b id="clock-time">--:--:--</b></div>
+    </div>
+  </header>
+
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-label">Total Agents</div>
+      <div class="stat-value">6</div>
+      <div class="stat-delta">All registered</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Active Now</div>
+      <div class="stat-value" id="active-count">3</div>
+      <div class="stat-delta">Running tasks</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Tasks Completed Today</div>
+      <div class="stat-value">27</div>
+      <div class="stat-delta">&#9650; 12% vs yesterday</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Videos In Pipeline</div>
+      <div class="stat-value">5</div>
+      <div class="stat-delta down">&#9660; 2 blocked on review</div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div>
+      <div class="panel">
+        <h2>Agent Status</h2>
+        <div id="agent-list"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Weekly Task Volume</h2>
+        <div class="chart-box"><canvas id="taskChart"></canvas></div>
+      </div>
+
+      <div class="panel">
+        <h2>Revenue Analytics</h2>
+        <div class="mini-stats">
+          <div class="mini-stat">
+            <div class="mini-stat-label">This Month</div>
+            <div class="mini-stat-value">$4,285</div>
+          </div>
+          <div class="mini-stat">
+            <div class="mini-stat-label">RPM</div>
+            <div class="mini-stat-value">$3.42</div>
+          </div>
+          <div class="mini-stat">
+            <div class="mini-stat-label">Growth</div>
+            <div class="mini-stat-value positive">+18%</div>
+          </div>
+        </div>
+        <div class="chart-box"><canvas id="revenueChart"></canvas></div>
+        <div class="revenue-breakdown" id="revenue-breakdown"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <h2>Content Pipeline</h2>
+        <div class="pipeline">
+          <div class="pipeline-item"><span>Script: "Top 10 AI Tools 2026"</span><span class="stage">Editing</span></div>
+          <div class="pipeline-item"><span>Thumbnail: "Weekly Recap #42"</span><span class="stage">Design</span></div>
+          <div class="pipeline-item"><span>SEO: "How AI Agents Work"</span><span class="stage">Optimizing</span></div>
+          <div class="pipeline-item"><span>Upload: "Behind the Scenes"</span><span class="stage">Scheduled</span></div>
+          <div class="pipeline-item"><span>Analytics: Q3 Channel Report</span><span class="stage">Queued</span></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Activity Feed</h2>
+        <div id="feed"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>Mock data for layout preview &middot; wire up to your real agents when ready &middot; <b>Black &amp; Gold Theme</b></footer>
+</div>
+
+<script>
+  const agents = [
+    {name:"Script Writer", icon:"&#9998;", status:"active", task:"Drafting: Top 10 AI Tools 2026", progress:64},
+    {name:"Thumbnail Designer", icon:"&#127912;", status:"active", task:"Rendering variant B", progress:38},
+    {name:"SEO Optimizer", icon:"&#128269;", status:"active", task:"Keyword pass on 3 titles", progress:81},
+    {name:"Upload Scheduler", icon:"&#128228;", status:"idle", task:"Awaiting next queued video", progress:0},
+    {name:"Analytics Agent", icon:"&#128202;", status:"queued", task:"Q3 report generation queued", progress:0},
+    {name:"Comment Moderator", icon:"&#128172;", status:"error", task:"API rate limit hit, retrying", progress:12},
+  ];
+
+  const statusLabel = {active:"Active", idle:"Idle", queued:"Queued", error:"Error"};
+
+  const list = document.getElementById('agent-list');
+  agents.forEach(a=>{
+    const row = document.createElement('div');
+    row.className = 'agent-row';
+    row.innerHTML = `
+      <div class="agent-avatar">${a.icon}</div>
+      <div class="agent-info">
+        <div class="agent-name">${a.name}</div>
+        <div class="agent-task">${a.task}</div>
+        ${a.progress > 0 ? `<div class="agent-progress"><div class="agent-progress-fill" style="width:${a.progress}%"></div></div>` : ''}
+      </div>
+      <div class="status-pill status-${a.status}">${statusLabel[a.status]}</div>
+    `;
+    list.appendChild(row);
+  });
+
+  const feedItems = [
+    {text:"Script Writer finished draft for \"AI Agent Explainer\"", time:"2 min ago"},
+    {text:"Thumbnail Designer uploaded 3 variants for review", time:"11 min ago"},
+    {text:"Upload Scheduler published \"Weekly Recap #41\"", time:"48 min ago"},
+    {text:"SEO Optimizer flagged low CTR title, suggested rewrite", time:"1 hr ago"},
+    {text:"Comment Moderator hit API rate limit, auto-retry scheduled", time:"1 hr ago"},
+    {text:"Analytics Agent completed channel health check", time:"3 hr ago"},
+  ];
+  const feed = document.getElementById('feed');
+  feedItems.forEach(f=>{
+    const item = document.createElement('div');
+    item.className = 'feed-item';
+    item.innerHTML = `<div class="feed-dot"></div><div><div class="feed-text">${f.text}</div><div class="feed-time">${f.time}</div></div>`;
+    feed.appendChild(item);
+  });
+
+  function updateClock(){
+    const now = new Date();
+    document.getElementById('clock-time').textContent = now.toLocaleTimeString();
+    document.getElementById('today').textContent = now.toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric', year:'numeric'});
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  const ctx = document.getElementById('taskChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+      datasets: [{
+        label: 'Tasks Completed',
+        data: [18, 22, 15, 27, 24, 9, 12],
+        backgroundColor: 'rgba(212,175,55,0.55)',
+        borderColor: '#f1cf6a',
+        borderWidth: 1,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#a8a294' } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#a8a294' }, beginAtZero:true }
+      }
+    }
+  });
+
+  const revenueSources = [
+    {label:"Ad Revenue", amount:2657, pct:62},
+    {label:"Sponsorships", amount:1200, pct:28},
+    {label:"Memberships", amount:428, pct:10},
+  ];
+  const revBreakdown = document.getElementById('revenue-breakdown');
+  revenueSources.forEach(r=>{
+    const row = document.createElement('div');
+    row.className = 'revenue-row';
+    row.innerHTML = `
+      <div class="revenue-row-top"><span>${r.label}</span><b>$${r.amount.toLocaleString()}</b></div>
+      <div class="revenue-bar"><div class="revenue-bar-fill" style="width:${r.pct}%"></div></div>
+    `;
+    revBreakdown.appendChild(row);
+  });
+
+  const revCtx = document.getElementById('revenueChart').getContext('2d');
+  new Chart(revCtx, {
+    type: 'line',
+    data: {
+      labels: ['Mar','Apr','May','Jun','Jul','Aug'],
+      datasets: [{
+        label: 'Revenue',
+        data: [2890, 3120, 3480, 3750, 3960, 4285],
+        borderColor: '#f1cf6a',
+        backgroundColor: 'rgba(212,175,55,0.15)',
+        fill: true,
+        tension: 0.35,
+        pointBackgroundColor: '#f1cf6a',
+        pointRadius: 3,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#a8a294' } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#a8a294', callback:(v)=>'$'+v }, beginAtZero:false }
+      }
+    }
+  });
+</script>
+</body>
+</html>
