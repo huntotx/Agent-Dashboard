@@ -133,6 +133,15 @@
 
   .chart-box{height:220px;}
 
+  .period-toggle{display:flex;gap:2px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:3px;}
+  .period-btn{
+    background:transparent;border:none;color:var(--text-dim);font-size:11px;font-weight:600;
+    text-transform:uppercase;letter-spacing:0.4px;padding:6px 12px;border-radius:6px;cursor:pointer;
+    transition:all 0.15s;
+  }
+  .period-btn:hover{color:var(--text);}
+  .period-btn.active{background:linear-gradient(135deg,var(--gold-bright),var(--gold-dim));color:#0a0a0a;}
+
   .mini-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px;}
   .mini-stat{background:rgba(212,175,55,0.05);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;}
   .mini-stat-label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.6px;}
@@ -241,19 +250,27 @@
 
   <div class="tab-panel" data-tab-panel="revenue">
     <div class="panel">
-      <h2>Revenue Analytics</h2>
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+        <h2 style="margin-bottom:0;">Revenue Analytics</h2>
+        <div class="period-toggle" id="period-toggle">
+          <button class="period-btn" data-period="day">Day</button>
+          <button class="period-btn" data-period="week">Week</button>
+          <button class="period-btn active" data-period="month">Month</button>
+          <button class="period-btn" data-period="year">Year</button>
+        </div>
+      </div>
       <div class="mini-stats">
         <div class="mini-stat">
-          <div class="mini-stat-label">This Month</div>
-          <div class="mini-stat-value">$4,285</div>
+          <div class="mini-stat-label" id="revenue-period-label">This Month</div>
+          <div class="mini-stat-value" id="revenue-period-value">$4,285</div>
         </div>
         <div class="mini-stat">
           <div class="mini-stat-label">RPM</div>
-          <div class="mini-stat-value">$3.42</div>
+          <div class="mini-stat-value" id="revenue-rpm-value">$3.42</div>
         </div>
         <div class="mini-stat">
           <div class="mini-stat-label">Growth</div>
-          <div class="mini-stat-value positive">+18%</div>
+          <div class="mini-stat-value positive" id="revenue-growth-value">+18%</div>
         </div>
       </div>
       <div class="chart-box"><canvas id="revenueChart"></canvas></div>
@@ -433,61 +450,121 @@
     });
   }
 
-  // Gross profit is what you've actually got in hand right now (nothing set aside yet).
-  // Taxes here is an estimate of what still needs to come OUT of that gross profit.
-  // Net profit = gross profit minus taxes -- the real, spendable number.
-  const grossProfit = 1640;
-  const taxRate = 0.25;
-  const taxOwed = Math.round(grossProfit * taxRate);
-  const netProfit = grossProfit - taxOwed;
+  // ---- Revenue by period ----
+  // Taxes are always an estimate of what still needs to come OUT of gross profit --
+  // gross profit is what you've got in hand right now, net profit is the real
+  // spendable number after tax money is set aside.
+  const TAX_RATE = 0.25;
 
-  const revenueSources = [
-    {label:"Media Revenue", amount:2890, pct:74},
-    {label:"Product", amount:1020, pct:26},
-    {label:"Gross Profit (before tax set-aside)", amount:grossProfit, pct:42, profit:true},
-    {label:`Taxes to set aside (est. ${Math.round(taxRate*100)}%)`, amount:taxOwed, pct:Math.round(taxRate*100), tax:true},
-    {label:"Net Profit (after tax set-aside)", amount:netProfit, pct:Math.round((netProfit/grossProfit)*100), net:true},
-  ];
-  const revBreakdown = document.getElementById('revenue-breakdown');
-  revenueSources.forEach(r=>{
-    const row = document.createElement('div');
-    row.className = 'revenue-row';
-    const kind = r.profit ? ' profit' : (r.tax ? ' tax' : (r.net ? ' net' : ''));
-    row.innerHTML = `
-      <div class="revenue-row-top${kind}"><span>${r.label}</span><b>$${r.amount.toLocaleString()}</b></div>
-      <div class="revenue-bar"><div class="revenue-bar-fill${kind}" style="width:${r.pct}%"></div></div>
-    `;
-    revBreakdown.appendChild(row);
+  const revenuePeriods = {
+    day: {
+      statLabel: "Today",
+      rpm: "$3.10", growth: "+5%",
+      chartLabels: ['12am','4am','8am','12pm','4pm','8pm'],
+      chartData: [4, 9, 22, 46, 68, 29],
+      media: 130, product: 48,
+    },
+    week: {
+      statLabel: "This Week",
+      rpm: "$3.25", growth: "+9%",
+      chartLabels: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+      chartData: [180, 210, 195, 240, 260, 300, 320],
+      media: 1260, product: 445,
+    },
+    month: {
+      statLabel: "This Month",
+      rpm: "$3.42", growth: "+18%",
+      chartLabels: ['Mar','Apr','May','Jun','Jul','Aug'],
+      chartData: [2890, 3120, 3480, 3750, 3960, 4285],
+      media: 2890, product: 1020,
+    },
+    year: {
+      statLabel: "This Year",
+      rpm: "$3.55", growth: "+34%",
+      chartLabels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug'],
+      chartData: [26800, 29400, 32100, 35600, 38900, 41200, 43800, 46320],
+      media: 34270, product: 12050,
+    },
+  };
+
+  function renderRevenuePeriod(period){
+    const p = revenuePeriods[period];
+    const total = p.media + p.product;
+    const grossProfit = Math.round(total * 0.42); // rough margin assumption for the mock
+    const taxOwed = Math.round(grossProfit * TAX_RATE);
+    const netProfit = grossProfit - taxOwed;
+
+    document.getElementById('revenue-period-label').textContent = p.statLabel;
+    document.getElementById('revenue-period-value').textContent = `$${total.toLocaleString()}`;
+    document.getElementById('revenue-rpm-value').textContent = p.rpm;
+    document.getElementById('revenue-growth-value').textContent = p.growth;
+
+    const revenueSources = [
+      {label:"Media Revenue", amount:p.media, pct:Math.round((p.media/total)*100)},
+      {label:"Product", amount:p.product, pct:Math.round((p.product/total)*100)},
+      {label:"Gross Profit (before tax set-aside)", amount:grossProfit, pct:42, profit:true},
+      {label:`Taxes to set aside (est. ${Math.round(TAX_RATE*100)}%)`, amount:taxOwed, pct:Math.round(TAX_RATE*100), tax:true},
+      {label:"Net Profit (after tax set-aside)", amount:netProfit, pct:Math.round((netProfit/grossProfit)*100), net:true},
+    ];
+    const revBreakdown = document.getElementById('revenue-breakdown');
+    revBreakdown.innerHTML = '';
+    revenueSources.forEach(r=>{
+      const row = document.createElement('div');
+      row.className = 'revenue-row';
+      const kind = r.profit ? ' profit' : (r.tax ? ' tax' : (r.net ? ' net' : ''));
+      row.innerHTML = `
+        <div class="revenue-row-top${kind}"><span>${r.label}</span><b>$${r.amount.toLocaleString()}</b></div>
+        <div class="revenue-bar"><div class="revenue-bar-fill${kind}" style="width:${r.pct}%"></div></div>
+      `;
+      revBreakdown.appendChild(row);
+    });
+
+    if (typeof Chart !== 'undefined') {
+      if (revenueChartInstance) {
+        revenueChartInstance.data.labels = p.chartLabels;
+        revenueChartInstance.data.datasets[0].data = p.chartData;
+        revenueChartInstance.update();
+      } else {
+        const revCtx = document.getElementById('revenueChart').getContext('2d');
+        revenueChartInstance = new Chart(revCtx, {
+          type: 'line',
+          data: {
+            labels: p.chartLabels,
+            datasets: [{
+              label: 'Revenue',
+              data: p.chartData,
+              borderColor: '#f1cf6a',
+              backgroundColor: 'rgba(212,175,55,0.15)',
+              fill: true,
+              tension: 0.35,
+              pointBackgroundColor: '#f1cf6a',
+              pointRadius: 3,
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#a8a294' } },
+              y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#a8a294', callback:(v)=>'$'+v }, beginAtZero:false }
+            }
+          }
+        });
+      }
+    }
+  }
+
+  document.querySelectorAll('.period-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      renderRevenuePeriod(btn.dataset.period);
+      if (revenueChartInstance) revenueChartInstance.resize();
+    });
   });
 
-  if (typeof Chart !== 'undefined') {
-    const revCtx = document.getElementById('revenueChart').getContext('2d');
-    revenueChartInstance = new Chart(revCtx, {
-      type: 'line',
-      data: {
-        labels: ['Mar','Apr','May','Jun','Jul','Aug'],
-        datasets: [{
-          label: 'Revenue',
-          data: [2890, 3120, 3480, 3750, 3960, 4285],
-          borderColor: '#f1cf6a',
-          backgroundColor: 'rgba(212,175,55,0.15)',
-          fill: true,
-          tension: 0.35,
-          pointBackgroundColor: '#f1cf6a',
-          pointRadius: 3,
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#a8a294' } },
-          y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#a8a294', callback:(v)=>'$'+v }, beginAtZero:false }
-        }
-      }
-    });
-  }
+  renderRevenuePeriod('month');
 </script>
 </body>
 </html>
