@@ -75,6 +75,21 @@
 
   .grid{display:grid;grid-template-columns:1.55fr 1fr;gap:20px;}
 
+  .tabs{
+    display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border);
+    overflow-x:auto;-webkit-overflow-scrolling:touch;
+  }
+  .tab-btn{
+    background:transparent;border:none;color:var(--text-dim);font-size:12px;font-weight:600;
+    text-transform:uppercase;letter-spacing:0.6px;padding:12px 18px;cursor:pointer;
+    border-bottom:2px solid transparent;white-space:nowrap;transition:color 0.15s,border-color 0.15s;
+  }
+  .tab-btn:hover{color:var(--text);}
+  .tab-btn.active{color:var(--gold-bright);border-bottom-color:var(--gold);}
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;animation:fadeIn 0.2s ease;}
+  @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+
   .panel{
     background:linear-gradient(180deg,var(--panel),var(--panel-2));
     border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:20px;
@@ -135,6 +150,8 @@
   .revenue-bar-fill.tax{background:linear-gradient(90deg,#8a0000,#ff1f1f);box-shadow:0 0 6px rgba(255,31,31,0.5);}
   .revenue-row-top.tax b{color:#ff3b3b;}
   .revenue-row-top.tax span{color:#ff6b6b;}
+  .revenue-row-top.net b{color:var(--gold-bright);}
+  .revenue-bar-fill.net{background:linear-gradient(90deg,var(--gold-bright),#fff3c4);box-shadow:0 0 6px rgba(241,207,106,0.5);}
 
   .pipeline{display:flex;flex-direction:column;gap:10px;}
   .pipeline-item{display:flex;justify-content:space-between;align-items:center;font-size:13px;
@@ -159,6 +176,7 @@
     .agent-progress{width:80px;}
     .brand h1{font-size:17px;}
     .mini-stats{grid-template-columns:1fr 1fr;}
+    .tab-btn{padding:10px 14px;font-size:11px;}
   }
 </style>
 </head>
@@ -202,55 +220,64 @@
     </div>
   </div>
 
-  <div class="grid">
-    <div>
-      <div class="panel">
-        <h2>Agent Status</h2>
-        <div id="agent-list"></div>
-      </div>
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="agents">Agents</button>
+    <button class="tab-btn" data-tab="revenue">Revenue</button>
+    <button class="tab-btn" data-tab="pipeline">Pipeline</button>
+    <button class="tab-btn" data-tab="activity">Activity</button>
+  </div>
 
-      <div class="panel">
-        <h2>Weekly Task Volume</h2>
-        <div class="chart-box"><canvas id="taskChart"></canvas></div>
-      </div>
-
-      <div class="panel">
-        <h2>Revenue Analytics</h2>
-        <div class="mini-stats">
-          <div class="mini-stat">
-            <div class="mini-stat-label">This Month</div>
-            <div class="mini-stat-value">$4,285</div>
-          </div>
-          <div class="mini-stat">
-            <div class="mini-stat-label">RPM</div>
-            <div class="mini-stat-value">$3.42</div>
-          </div>
-          <div class="mini-stat">
-            <div class="mini-stat-label">Growth</div>
-            <div class="mini-stat-value positive">+18%</div>
-          </div>
-        </div>
-        <div class="chart-box"><canvas id="revenueChart"></canvas></div>
-        <div class="revenue-breakdown" id="revenue-breakdown"></div>
-      </div>
+  <div class="tab-panel active" data-tab-panel="agents">
+    <div class="panel">
+      <h2>Agent Status</h2>
+      <div id="agent-list"></div>
     </div>
 
-    <div>
-      <div class="panel">
-        <h2>Content Pipeline</h2>
-        <div class="pipeline">
-          <div class="pipeline-item"><span>Script: "Top 10 AI Tools 2026"</span><span class="stage">Editing</span></div>
-          <div class="pipeline-item"><span>Thumbnail: "Weekly Recap #42"</span><span class="stage">Design</span></div>
-          <div class="pipeline-item"><span>SEO: "How AI Agents Work"</span><span class="stage">Optimizing</span></div>
-          <div class="pipeline-item"><span>Upload: "Behind the Scenes"</span><span class="stage">Scheduled</span></div>
-          <div class="pipeline-item"><span>Analytics: Q3 Channel Report</span><span class="stage">Queued</span></div>
+    <div class="panel">
+      <h2>Weekly Task Volume</h2>
+      <div class="chart-box"><canvas id="taskChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="tab-panel" data-tab-panel="revenue">
+    <div class="panel">
+      <h2>Revenue Analytics</h2>
+      <div class="mini-stats">
+        <div class="mini-stat">
+          <div class="mini-stat-label">This Month</div>
+          <div class="mini-stat-value">$4,285</div>
+        </div>
+        <div class="mini-stat">
+          <div class="mini-stat-label">RPM</div>
+          <div class="mini-stat-value">$3.42</div>
+        </div>
+        <div class="mini-stat">
+          <div class="mini-stat-label">Growth</div>
+          <div class="mini-stat-value positive">+18%</div>
         </div>
       </div>
+      <div class="chart-box"><canvas id="revenueChart"></canvas></div>
+      <div class="revenue-breakdown" id="revenue-breakdown"></div>
+    </div>
+  </div>
 
-      <div class="panel">
-        <h2>Activity Feed</h2>
-        <div id="feed"></div>
+  <div class="tab-panel" data-tab-panel="pipeline">
+    <div class="panel">
+      <h2>Content Pipeline</h2>
+      <div class="pipeline">
+        <div class="pipeline-item"><span>Script: "Top 10 AI Tools 2026"</span><span class="stage">Editing</span></div>
+        <div class="pipeline-item"><span>Thumbnail: "Weekly Recap #42"</span><span class="stage">Design</span></div>
+        <div class="pipeline-item"><span>SEO: "How AI Agents Work"</span><span class="stage">Optimizing</span></div>
+        <div class="pipeline-item"><span>Upload: "Behind the Scenes"</span><span class="stage">Scheduled</span></div>
+        <div class="pipeline-item"><span>Analytics: Q3 Channel Report</span><span class="stage">Queued</span></div>
       </div>
+    </div>
+  </div>
+
+  <div class="tab-panel" data-tab-panel="activity">
+    <div class="panel">
+      <h2>Activity Feed</h2>
+      <div id="feed"></div>
     </div>
   </div>
 
@@ -279,6 +306,21 @@
   const mockStats = { tasksCompletedToday: 27, videosInPipeline: 5 };
 
   const statusLabel = {active:"Active", idle:"Idle", queued:"Queued", error:"Error"};
+  let taskChartInstance = null;
+  let revenueChartInstance = null;
+
+  // ---- Tabs ----
+  document.querySelectorAll('.tab-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelector(`[data-tab-panel="${btn.dataset.tab}"]`).classList.add('active');
+      // Charts drawn while hidden get sized wrong -- fix that on switch.
+      if (taskChartInstance) taskChartInstance.resize();
+      if (revenueChartInstance) revenueChartInstance.resize();
+    });
+  });
 
   function timeAgo(iso){
     if(!iso) return '';
@@ -366,7 +408,7 @@
 
   if (typeof Chart !== 'undefined') {
     const ctx = document.getElementById('taskChart').getContext('2d');
-    new Chart(ctx, {
+    taskChartInstance = new Chart(ctx, {
       type: 'bar',
       data: {
         labels: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
@@ -391,17 +433,26 @@
     });
   }
 
+  // Gross profit is what you've actually got in hand right now (nothing set aside yet).
+  // Taxes here is an estimate of what still needs to come OUT of that gross profit.
+  // Net profit = gross profit minus taxes -- the real, spendable number.
+  const grossProfit = 1640;
+  const taxRate = 0.25;
+  const taxOwed = Math.round(grossProfit * taxRate);
+  const netProfit = grossProfit - taxOwed;
+
   const revenueSources = [
     {label:"Media Revenue", amount:2890, pct:74},
     {label:"Product", amount:1020, pct:26},
-    {label:"Profit", amount:1640, pct:42, profit:true},
-    {label:"Taxes (est. 25%)", amount:410, pct:25, tax:true},
+    {label:"Gross Profit (before tax set-aside)", amount:grossProfit, pct:42, profit:true},
+    {label:`Taxes to set aside (est. ${Math.round(taxRate*100)}%)`, amount:taxOwed, pct:Math.round(taxRate*100), tax:true},
+    {label:"Net Profit (after tax set-aside)", amount:netProfit, pct:Math.round((netProfit/grossProfit)*100), net:true},
   ];
   const revBreakdown = document.getElementById('revenue-breakdown');
   revenueSources.forEach(r=>{
     const row = document.createElement('div');
     row.className = 'revenue-row';
-    const kind = r.profit ? ' profit' : (r.tax ? ' tax' : '');
+    const kind = r.profit ? ' profit' : (r.tax ? ' tax' : (r.net ? ' net' : ''));
     row.innerHTML = `
       <div class="revenue-row-top${kind}"><span>${r.label}</span><b>$${r.amount.toLocaleString()}</b></div>
       <div class="revenue-bar"><div class="revenue-bar-fill${kind}" style="width:${r.pct}%"></div></div>
@@ -411,7 +462,7 @@
 
   if (typeof Chart !== 'undefined') {
     const revCtx = document.getElementById('revenueChart').getContext('2d');
-    new Chart(revCtx, {
+    revenueChartInstance = new Chart(revCtx, {
       type: 'line',
       data: {
         labels: ['Mar','Apr','May','Jun','Jul','Aug'],
