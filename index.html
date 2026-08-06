@@ -9,7 +9,6 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Agent Dash">
 <meta name="theme-color" content="#08080a">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
   :root{
     --black:#08080a;
@@ -131,6 +130,11 @@
   .revenue-row-top b{color:var(--text);font-weight:600;}
   .revenue-bar{height:6px;border-radius:4px;background:rgba(255,255,255,0.06);overflow:hidden;}
   .revenue-bar-fill{height:100%;background:linear-gradient(90deg,var(--gold-dim),var(--gold-bright));}
+  .revenue-bar-fill.profit{background:linear-gradient(90deg,#2f6b47,var(--green));}
+  .revenue-row-top.profit b{color:var(--green);}
+  .revenue-bar-fill.tax{background:linear-gradient(90deg,#8a0000,#ff1f1f);box-shadow:0 0 6px rgba(255,31,31,0.5);}
+  .revenue-row-top.tax b{color:#ff3b3b;}
+  .revenue-row-top.tax span{color:#ff6b6b;}
 
   .pipeline{display:flex;flex-direction:column;gap:10px;}
   .pipeline-item{display:flex;justify-content:space-between;align-items:center;font-size:13px;
@@ -178,8 +182,8 @@
   <div class="stats">
     <div class="stat-card">
       <div class="stat-label">Total Agents</div>
-      <div class="stat-value">6</div>
-      <div class="stat-delta">All registered</div>
+      <div class="stat-value" id="total-agents-count">6</div>
+      <div class="stat-delta" id="live-indicator">Mock data</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">Active Now</div>
@@ -188,12 +192,12 @@
     </div>
     <div class="stat-card">
       <div class="stat-label">Tasks Completed Today</div>
-      <div class="stat-value">27</div>
+      <div class="stat-value" id="tasks-completed-count">27</div>
       <div class="stat-delta">&#9650; 12% vs yesterday</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">Videos In Pipeline</div>
-      <div class="stat-value">5</div>
+      <div class="stat-value" id="videos-pipeline-count">5</div>
       <div class="stat-delta down">&#9660; 2 blocked on review</div>
     </div>
   </div>
@@ -253,8 +257,10 @@
   <footer>Mock data for layout preview &middot; wire up to your real agents when ready &middot; <b>Black &amp; Gold Theme</b></footer>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script>
-  const agents = [
+  // ---- Fallback mock data (shown until data.json exists / loads) ----
+  const mockAgents = [
     {name:"Script Writer", icon:"&#9998;", status:"active", task:"Drafting: Top 10 AI Tools 2026", progress:64},
     {name:"Thumbnail Designer", icon:"&#127912;", status:"active", task:"Rendering variant B", progress:38},
     {name:"SEO Optimizer", icon:"&#128269;", status:"active", task:"Keyword pass on 3 titles", progress:81},
@@ -262,26 +268,7 @@
     {name:"Analytics Agent", icon:"&#128202;", status:"queued", task:"Q3 report generation queued", progress:0},
     {name:"Comment Moderator", icon:"&#128172;", status:"error", task:"API rate limit hit, retrying", progress:12},
   ];
-
-  const statusLabel = {active:"Active", idle:"Idle", queued:"Queued", error:"Error"};
-
-  const list = document.getElementById('agent-list');
-  agents.forEach(a=>{
-    const row = document.createElement('div');
-    row.className = 'agent-row';
-    row.innerHTML = `
-      <div class="agent-avatar">${a.icon}</div>
-      <div class="agent-info">
-        <div class="agent-name">${a.name}</div>
-        <div class="agent-task">${a.task}</div>
-        ${a.progress > 0 ? `<div class="agent-progress"><div class="agent-progress-fill" style="width:${a.progress}%"></div></div>` : ''}
-      </div>
-      <div class="status-pill status-${a.status}">${statusLabel[a.status]}</div>
-    `;
-    list.appendChild(row);
-  });
-
-  const feedItems = [
+  const mockFeed = [
     {text:"Script Writer finished draft for \"AI Agent Explainer\"", time:"2 min ago"},
     {text:"Thumbnail Designer uploaded 3 variants for review", time:"11 min ago"},
     {text:"Upload Scheduler published \"Weekly Recap #41\"", time:"48 min ago"},
@@ -289,13 +276,85 @@
     {text:"Comment Moderator hit API rate limit, auto-retry scheduled", time:"1 hr ago"},
     {text:"Analytics Agent completed channel health check", time:"3 hr ago"},
   ];
-  const feed = document.getElementById('feed');
-  feedItems.forEach(f=>{
-    const item = document.createElement('div');
-    item.className = 'feed-item';
-    item.innerHTML = `<div class="feed-dot"></div><div><div class="feed-text">${f.text}</div><div class="feed-time">${f.time}</div></div>`;
-    feed.appendChild(item);
-  });
+  const mockStats = { tasksCompletedToday: 27, videosInPipeline: 5 };
+
+  const statusLabel = {active:"Active", idle:"Idle", queued:"Queued", error:"Error"};
+
+  function timeAgo(iso){
+    if(!iso) return '';
+    const diffMs = Date.now() - new Date(iso).getTime();
+    const mins = Math.floor(diffMs/60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins} min ago`;
+    const hrs = Math.floor(mins/60);
+    if (hrs < 24) return `${hrs} hr ago`;
+    return `${Math.floor(hrs/24)} day ago`;
+  }
+
+  function renderAgents(agents){
+    const list = document.getElementById('agent-list');
+    list.innerHTML = '';
+    agents.forEach(a=>{
+      const row = document.createElement('div');
+      row.className = 'agent-row';
+      row.innerHTML = `
+        <div class="agent-avatar">${a.icon || '&#129302;'}</div>
+        <div class="agent-info">
+          <div class="agent-name">${a.name}</div>
+          <div class="agent-task">${a.task || ''}</div>
+          ${a.progress > 0 ? `<div class="agent-progress"><div class="agent-progress-fill" style="width:${a.progress}%"></div></div>` : ''}
+        </div>
+        <div class="status-pill status-${a.status}">${statusLabel[a.status] || a.status}</div>
+      `;
+      list.appendChild(row);
+    });
+    document.getElementById('total-agents-count').textContent = agents.length;
+    document.getElementById('active-count').textContent = agents.filter(a=>a.status==='active').length;
+  }
+
+  function renderFeed(items){
+    const feed = document.getElementById('feed');
+    feed.innerHTML = '';
+    items.slice(0,8).forEach(f=>{
+      const item = document.createElement('div');
+      item.className = 'feed-item';
+      const when = f.time || timeAgo(f.timestamp);
+      item.innerHTML = `<div class="feed-dot"></div><div><div class="feed-text">${f.text}</div><div class="feed-time">${when}</div></div>`;
+      feed.appendChild(item);
+    });
+  }
+
+  function renderStats(stats){
+    if (stats.tasksCompletedToday != null) document.getElementById('tasks-completed-count').textContent = stats.tasksCompletedToday;
+    if (stats.videosInPipeline != null) document.getElementById('videos-pipeline-count').textContent = stats.videosInPipeline;
+  }
+
+  async function loadLiveData(){
+    try {
+      const res = await fetch('data.json', { cache: 'no-store' });
+      if (!res.ok) throw new Error('data.json not found yet');
+      const data = await res.json();
+
+      const agentsArr = Object.entries(data.agents || {}).map(([name, a]) => ({ name, ...a }));
+      renderAgents(agentsArr.length ? agentsArr : mockAgents);
+      renderFeed((data.activity && data.activity.length) ? data.activity : mockFeed);
+      renderStats(data.stats || mockStats);
+
+      const indicator = document.getElementById('live-indicator');
+      if (data.updatedAt) {
+        indicator.textContent = `Live · updated ${timeAgo(data.updatedAt)}`;
+        indicator.style.color = 'var(--green)';
+      }
+    } catch (e) {
+      // No data.json yet (or it failed to load) — show the mock layout so the dashboard still looks right.
+      renderAgents(mockAgents);
+      renderFeed(mockFeed);
+      renderStats(mockStats);
+    }
+  }
+
+  loadLiveData();
+  setInterval(loadLiveData, 30000); // poll every 30s for updates
 
   function updateClock(){
     const now = new Date();
@@ -305,73 +364,79 @@
   updateClock();
   setInterval(updateClock, 1000);
 
-  const ctx = document.getElementById('taskChart').getContext('2d');
-  new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
-      datasets: [{
-        label: 'Tasks Completed',
-        data: [18, 22, 15, 27, 24, 9, 12],
-        backgroundColor: 'rgba(212,175,55,0.55)',
-        borderColor: '#f1cf6a',
-        borderWidth: 1,
-        borderRadius: 4,
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#a8a294' } },
-        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#a8a294' }, beginAtZero:true }
+  if (typeof Chart !== 'undefined') {
+    const ctx = document.getElementById('taskChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+        datasets: [{
+          label: 'Tasks Completed',
+          data: [18, 22, 15, 27, 24, 9, 12],
+          backgroundColor: 'rgba(212,175,55,0.55)',
+          borderColor: '#f1cf6a',
+          borderWidth: 1,
+          borderRadius: 4,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#a8a294' } },
+          y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#a8a294' }, beginAtZero:true }
+        }
       }
-    }
-  });
+    });
+  }
 
   const revenueSources = [
-    {label:"Ad Revenue", amount:2657, pct:62},
-    {label:"Sponsorships", amount:1200, pct:28},
-    {label:"Memberships", amount:428, pct:10},
+    {label:"Media Revenue", amount:2890, pct:74},
+    {label:"Product", amount:1020, pct:26},
+    {label:"Profit", amount:1640, pct:42, profit:true},
+    {label:"Taxes (est. 25%)", amount:410, pct:25, tax:true},
   ];
   const revBreakdown = document.getElementById('revenue-breakdown');
   revenueSources.forEach(r=>{
     const row = document.createElement('div');
     row.className = 'revenue-row';
+    const kind = r.profit ? ' profit' : (r.tax ? ' tax' : '');
     row.innerHTML = `
-      <div class="revenue-row-top"><span>${r.label}</span><b>$${r.amount.toLocaleString()}</b></div>
-      <div class="revenue-bar"><div class="revenue-bar-fill" style="width:${r.pct}%"></div></div>
+      <div class="revenue-row-top${kind}"><span>${r.label}</span><b>$${r.amount.toLocaleString()}</b></div>
+      <div class="revenue-bar"><div class="revenue-bar-fill${kind}" style="width:${r.pct}%"></div></div>
     `;
     revBreakdown.appendChild(row);
   });
 
-  const revCtx = document.getElementById('revenueChart').getContext('2d');
-  new Chart(revCtx, {
-    type: 'line',
-    data: {
-      labels: ['Mar','Apr','May','Jun','Jul','Aug'],
-      datasets: [{
-        label: 'Revenue',
-        data: [2890, 3120, 3480, 3750, 3960, 4285],
-        borderColor: '#f1cf6a',
-        backgroundColor: 'rgba(212,175,55,0.15)',
-        fill: true,
-        tension: 0.35,
-        pointBackgroundColor: '#f1cf6a',
-        pointRadius: 3,
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#a8a294' } },
-        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#a8a294', callback:(v)=>'$'+v }, beginAtZero:false }
+  if (typeof Chart !== 'undefined') {
+    const revCtx = document.getElementById('revenueChart').getContext('2d');
+    new Chart(revCtx, {
+      type: 'line',
+      data: {
+        labels: ['Mar','Apr','May','Jun','Jul','Aug'],
+        datasets: [{
+          label: 'Revenue',
+          data: [2890, 3120, 3480, 3750, 3960, 4285],
+          borderColor: '#f1cf6a',
+          backgroundColor: 'rgba(212,175,55,0.15)',
+          fill: true,
+          tension: 0.35,
+          pointBackgroundColor: '#f1cf6a',
+          pointRadius: 3,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#a8a294' } },
+          y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#a8a294', callback:(v)=>'$'+v }, beginAtZero:false }
+        }
       }
-    }
-  });
+    });
+  }
 </script>
 </body>
 </html>
